@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  servidorPruebas:
+    image: debian
+    container_name: servidorPruebas
+    networks:
+      custom-net:
+    ports:
+      - "127.168.1.31:28:22"
+    volumes:
+      - C:\Users\juang\.ssh\id_rsa.pub:/root/.ssh/authorized_keys
+    command: /bin/bash -c "\
+      set -e && \
+      apt update && \
+      apt install -y iproute2 isc-dhcp-client openssh-server && \
+      mkdir -p /root/.ssh && \
+      chown root:root /root/.ssh/authorized_keys && \
+      chmod 600 /root/.ssh/authorized_keys && \
+      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+      sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+      mkdir -p /run/sshd && \
+      dhclient eth0 && \
+      /usr/sbin/sshd -D"
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  custom-net:
+    external: true
